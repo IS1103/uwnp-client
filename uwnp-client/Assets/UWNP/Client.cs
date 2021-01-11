@@ -58,7 +58,6 @@ namespace UWNP
                 socket.DataReceived += OnReceived;
                 bool isOK = await protocol.HandsharkAsync(token);
                 //Debug.Log("open:" + e);
-                socket.Closed += OnDisconect;
                 state = NetWorkState.CONNECTED;
                 utcs.TrySetResult(isOK);
             };
@@ -79,13 +78,6 @@ namespace UWNP
             Debug.LogError(e.Exception.Message);
             state = NetWorkState.ERROR;
             Destroy();
-        }
-
-        private void OnDisconect(object sender, EventArgs e)
-        {
-            state = NetWorkState.DISCONNECTED;
-            protocol.StopHeartbeat();
-            Debug.Log("close:" + e);
         }
 
         private void OnReceived(object sender, DataReceivedEventArgs e)
@@ -145,5 +137,6 @@ namespace UWNP
                 protocol.CanceledAllUTcs();
             }
         }
+
     }
 }

@@ -38,13 +38,13 @@ namespace UWNP{
                 client.On("testOn",(Package pack) => {
                     TestPush info = MessageProtocol.DecodeInfo<TestPush>(pack.buff);
                     Debug.Log(JsonUtility.ToJson(info));
-                    img.gameObject.SetActive(true);
-                });
+                    img.gameObject.SetActive(false);
+                });//*/
 
                 //請求/響應
                 TestRq testRq = new TestRq();
                 Message<TestRp> a = await client.RequestAsync<TestRq, TestRp>("TestController.testA", testRq);
-                Debug.Log("a:"+ a.info.packageType);
+                Debug.Log("a:"+ a.info.packageType);//*/
 
                 //通知
                 TestNotify testRq2 = new TestNotify() { name="小叮噹" };

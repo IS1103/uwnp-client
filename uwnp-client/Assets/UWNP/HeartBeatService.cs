@@ -53,7 +53,7 @@ namespace UWNP
 
         private void SendHeartbeatPack()
         {
-            Debug.Log("送出心跳包");
+            //Debug.Log("送出心跳包");
             byte[] package = PackageProtocol.Encode(
                 PackageType.HEARTBEAT);
             socket.Send(package, 0, package.Length);
