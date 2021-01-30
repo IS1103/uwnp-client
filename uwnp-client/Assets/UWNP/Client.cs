@@ -22,9 +22,10 @@ namespace UWNP
     {
         private static int RqID = 0;
 
-        public NetWorkState state;
+        //public NetWorkState state;
 
-        public Action OnReconect;
+        public Action OnReconect,OnDisconnect;
+        public uint retry;
 
         Protocol protocol;
 
@@ -37,47 +38,50 @@ namespace UWNP
                     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;//*/
         }
 
-        public UniTask<bool> ConnectAsync(string host, string token)
+        public UniTask<bool> ConnectAsync(string host, string token, uint apiRetry = 3, float responseTime = 5)
         {
+            this.retry = apiRetry;
             UniTaskCompletionSource<bool> utcs = new UniTaskCompletionSource<bool>();
             socket = new WebSocket(host);
+            socket.DataReceived += OnReceived;
+            socket.Closed += OnClose;
             EventHandler<SuperSocket.ClientEngine.ErrorEventArgs> onErr = (sender, e) =>
             {
                 Debug.LogError(e.Exception.Message);
-                state = NetWorkState.ERROR;
                 utcs.TrySetResult(false);
             };
             socket.Error += onErr;
             socket.Opened += async (sender, e) =>
             {
+                Debug.Log("已連線");
                 socket.Error -= onErr;
                 socket.Error += OnErr;
-                socket.Closed += OnClose;
-                protocol = new Protocol();
+
+                if (protocol == null)
+                    protocol = new Protocol();
                 protocol.SetSocket(socket);
-                socket.DataReceived += OnReceived;
                 bool isOK = await protocol.HandsharkAsync(token);
                 //Debug.Log("open:" + e);
-                state = NetWorkState.CONNECTED;
                 utcs.TrySetResult(isOK);
             };
 
-            state = NetWorkState.CONNECTING;
             socket.Open();
             return utcs.Task;
         }
 
-        private void OnClose(object sender, EventArgs e)
+        private async void OnClose(object sender, EventArgs e)
         {
-            Debug.LogError(e.ToString());
-            state = NetWorkState.DISCONNECTED;
+            if (socket.State == WebSocketState.Connecting || socket.State == WebSocketState.Open) return;
+            await UniTask.SwitchToMainThread();
+            Cancel();
+            await UniTask.Delay(1000);
+            socket.Open();
+            OnDisconnect?.Invoke();
         }
 
-        private void OnErr(object sender, ErrorEventArgs e)
+        public void OnErr(object sender, ErrorEventArgs e)
         {
             Debug.LogError(e.Exception.Message);
-            state = NetWorkState.ERROR;
-            Destroy();
         }
 
         private void OnReceived(object sender, DataReceivedEventArgs e)
@@ -128,9 +132,11 @@ namespace UWNP
             }
         }
 
-        public void Destroy() {
-            state = NetWorkState.DISCONNECTED;
-            socket.Close();
+        public void Cancel() {
+            if (socket.State != WebSocketState.Closed)
+            {
+                socket.Close();
+            }
             if (protocol!=null)
             {
                 protocol.StopHeartbeat();

@@ -14,7 +14,7 @@ namespace UWNP
         UniTaskCompletionSource<bool> handshakeTcs;
         Dictionary<uint, UniTaskCompletionSource<Package>> packTcs = new Dictionary<uint, UniTaskCompletionSource<Package>>();
         WebSocket socket;
-        HeartBeatService heartBeatService;
+        public HeartBeatServiceGameObject heartBeatServiceGo;
 
         public void SetSocket(WebSocket socket)
         {
@@ -68,6 +68,7 @@ namespace UWNP
                     tcs.Value.TrySetCanceled();
                 }
                 packTcs.Clear();
+                handshakeTcs.TrySetCanceled();
             }
         }
 
@@ -75,6 +76,7 @@ namespace UWNP
         {
             try
             {
+                await UniTask.SwitchToMainThread();
                 Package package = PackageProtocol.Decode(bytes);
 
                 //Debug.Log(package.packageType);
@@ -82,25 +84,19 @@ namespace UWNP
                 switch ((PackageType)package.packageType)
                 {
                     case PackageType.HEARTBEAT:
-                        //Debug.Log(PackageType.HEARTBEAT);
-                        heartBeatService.HitHole();
+                        heartBeatServiceGo.HitHole();
                         break;
                     case PackageType.RESPONSE:
-                        await UniTask.SwitchToMainThread();
                         ResponseHandler(package);
                         break;
                     case PackageType.PUSH:
-                        Debug.Log("PUSH");
-                        await UniTask.SwitchToMainThread();
                         PushHandler(package);
                         break;
                     case PackageType.HANDSHAKE:
-                        await UniTask.SwitchToMainThread();
-                        //Debug.Log(PackageType.HANDSHAKE);
                         HandshakeHandler(package);
                         break;
                     case PackageType.KICK:
-                        await UniTask.SwitchToMainThread();
+
                         //HandleKick(package);
                         break;
                     case PackageType.ERROR:
@@ -121,9 +117,11 @@ namespace UWNP
 
         public void StopHeartbeat()
         {
-            if (heartBeatService!=null)
+            if (heartBeatServiceGo != null)
             {
-                heartBeatService.Stop();
+                Debug.Log("關掉HB");
+                heartBeatServiceGo.Stop();
+                //heartBeatServiceGo = null;
             }
         }
 
@@ -158,7 +156,10 @@ namespace UWNP
             lock (packTcs)
             {
                 packTcs[package.packID].TrySetResult(package);
-                packTcs.Remove(package.packID);
+                if (packTcs.ContainsKey(package.packID))
+                {
+                    packTcs.Remove(package.packID);
+                }
             }
         }
 
@@ -172,13 +173,18 @@ namespace UWNP
                 return;
             }
 
-            if (heartBeatService != null)
+            if (heartBeatServiceGo == null)
             {
-                heartBeatService.ResetTimeout();
+                Debug.Log("空的，新開一個GO");
+                GameObject go = new GameObject();
+                go.name = "heartBeatServiceGo";
+                heartBeatServiceGo = go.AddComponent(typeof(HeartBeatServiceGameObject)) as HeartBeatServiceGameObject;
+                heartBeatServiceGo.Setup(msg.info.heartbeat, OnServerTimeout, socket);
             }
             else
             {
-                heartBeatService = new HeartBeatService(msg.info.heartbeat, OnSendHeartbeat, socket);
+                Debug.Log("重新連線，心跳重啟啦！");
+                heartBeatServiceGo.ResetTimeout(msg.info.heartbeat);
             }//*/
             handshakeTcs.TrySetResult(true);
         }
@@ -189,10 +195,17 @@ namespace UWNP
             Debug.LogError(string.Format("packType:{2} err:{0} msg:{1}", msg.err, msg.errMsg, package.packageType));
         }
 
-        private void OnSendHeartbeat()
+        private void OnServerTimeout()
         {
             Debug.Log("伺服器沒有回應心跳");
-            socket.Close();
+            if (socket.State == WebSocketState.Connecting)
+            {
+                socket.Close();
+            }
+            if (heartBeatServiceGo != null && socket.State != WebSocketState.Connecting && socket.State != WebSocketState.Open)
+            {
+                heartBeatServiceGo.Stop();
+            }
         }
     }
 }
