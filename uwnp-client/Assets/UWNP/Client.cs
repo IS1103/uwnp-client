@@ -26,22 +26,24 @@ namespace UWNP
 
         public Action OnReconect,OnDisconnect;
         public uint retry;
-
+        private string host;
+        private float responseTime;
         Protocol protocol;
-
         WebSocket socket;
+        UniTaskCompletionSource<bool> utcs;
+        private bool isForce;
 
-        public Client()
+        public Client(string host,string token, uint apiRetry = 3, float responseTime = 5)
         {
             ServicePointManager.SecurityProtocol =
                     SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls |
                     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;//*/
-        }
 
-        public UniTask<bool> ConnectAsync(string host, string token, uint apiRetry = 3, float responseTime = 5)
-        {
             this.retry = apiRetry;
-            UniTaskCompletionSource<bool> utcs = new UniTaskCompletionSource<bool>();
+            this.host = host;
+            this.responseTime = responseTime;
+
+            utcs = new UniTaskCompletionSource<bool>();
             socket = new WebSocket(host);
             socket.DataReceived += OnReceived;
             socket.Closed += OnClose;
@@ -64,6 +66,11 @@ namespace UWNP
                 //Debug.Log("open:" + e);
                 utcs.TrySetResult(isOK);
             };
+        }
+
+        public UniTask<bool> ConnectAsync(string token)
+        {
+            
 
             socket.Open();
             return utcs.Task;
@@ -74,8 +81,11 @@ namespace UWNP
             if (socket.State == WebSocketState.Connecting || socket.State == WebSocketState.Open) return;
             await UniTask.SwitchToMainThread();
             Cancel();
-            await UniTask.Delay(1000);
-            socket.Open();
+            if (!isForce)
+            {
+                await UniTask.Delay(1000);
+                socket.Open();
+            }
             OnDisconnect?.Invoke();
         }
 
@@ -132,7 +142,9 @@ namespace UWNP
             }
         }
 
-        public void Cancel() {
+        public void Cancel(bool isForce = false) {
+            this.isForce = isForce;
+            utcs.TrySetCanceled();
             if (socket.State != WebSocketState.Closed)
             {
                 socket.Close();

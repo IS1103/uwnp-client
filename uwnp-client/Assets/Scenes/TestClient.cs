@@ -22,7 +22,10 @@ namespace UWNP{
         }
 
         public void CreateConeccetionBtn() {
-            client = new Client();
+
+            string host = string.Format("ws://{0}:{1}/=1.0.0", this.host, port.text);
+
+            client = new Client(host, token, 3);
             client.OnDisconnect = OnDisconnect;
             CreateConeccetion().Forget();
         }
@@ -53,13 +56,13 @@ namespace UWNP{
         private async UniTaskVoid CreateConeccetion()
         {
             Debug.Log("開始連線..."+ host);
+
             int count = 3;
             bool isConeccet = false;
             while (count-->0 && !isConeccet)
             {
-                string host = string.Format("ws://{0}:{1}/=1.0.0", this.host, port.text);
                 Debug.Log(host);
-                isConeccet = await client.ConnectAsync(host, token,3);
+                isConeccet = await client.ConnectAsync(token);
             }
             
             if (isConeccet)
