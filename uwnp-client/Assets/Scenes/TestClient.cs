@@ -68,12 +68,12 @@ namespace UWNP{
             if (isConeccet)
             {
                 img.gameObject.SetActive(true);
-                /*
+                
                 // On
                 client.On("testOn",(Package pack) => {
                     TestPush info = MessageProtocol.DecodeInfo<TestPush>(pack.buff);
                     Debug.Log(JsonUtility.ToJson(info));
-                    img.gameObject.SetActive(false);
+                    //img.gameObject.SetActive(false);
                 });
 
                 //請求/響應
