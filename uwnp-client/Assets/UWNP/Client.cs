@@ -25,23 +25,18 @@ namespace UWNP
         //public NetWorkState state;
 
         public Action OnReconect,OnDisconnect;
+        public Action<string> OnError;
         public uint retry;
-        private string host;
-        private float responseTime;
         Protocol protocol;
         WebSocket socket;
         UniTaskCompletionSource<bool> utcs;
         private bool isForce;
 
-        public Client(string host,string token, uint apiRetry = 3, float responseTime = 5)
+        public Client(string host,string token)
         {
             ServicePointManager.SecurityProtocol =
                     SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls |
                     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;//*/
-
-            this.retry = apiRetry;
-            this.host = host;
-            this.responseTime = responseTime;
 
             utcs = new UniTaskCompletionSource<bool>();
             socket = new WebSocket(host);
@@ -49,29 +44,28 @@ namespace UWNP
             socket.Closed += OnClose;
             EventHandler<SuperSocket.ClientEngine.ErrorEventArgs> onErr = (sender, e) =>
             {
-                Debug.LogError(e.Exception.Message);
+                OnError?.Invoke(e.Exception.Message);
                 utcs.TrySetResult(false);
             };
             socket.Error += onErr;
             socket.Opened += async (sender, e) =>
             {
-                Debug.Log("已連線");
                 socket.Error -= onErr;
                 socket.Error += OnErr;
 
                 if (protocol == null)
                     protocol = new Protocol();
                 protocol.SetSocket(socket);
+                protocol.OnReconect = OnReconect;
+                protocol.OnError = OnError;
                 bool isOK = await protocol.HandsharkAsync(token);
                 //Debug.Log("open:" + e);
                 utcs.TrySetResult(isOK);
             };
         }
 
-        public UniTask<bool> ConnectAsync(string token)
+        public UniTask<bool> ConnectAsync()
         {
-            
-
             socket.Open();
             return utcs.Task;
         }
@@ -106,6 +100,7 @@ namespace UWNP
 
         public void Notify<T>(string route, T info = default)
         {
+            uint rqID = (uint)Interlocked.Increment(ref RqID);
             try
             {
 #if SOCKET_DEBUG

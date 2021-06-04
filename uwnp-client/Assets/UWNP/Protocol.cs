@@ -15,6 +15,8 @@ namespace UWNP
         Dictionary<uint, UniTaskCompletionSource<Package>> packTcs = new Dictionary<uint, UniTaskCompletionSource<Package>>();
         WebSocket socket;
         public HeartBeatServiceGameObject heartBeatServiceGo;
+        public Action OnReconect;
+        public Action<string> OnError;
 
         public void SetSocket(WebSocket socket)
         {
@@ -84,6 +86,7 @@ namespace UWNP
                 switch ((PackageType)package.packageType)
                 {
                     case PackageType.HEARTBEAT:
+                        //Debug.LogWarning("get HEARTBEAT");
                         heartBeatServiceGo.HitHole();
                         break;
                     case PackageType.RESPONSE:
@@ -103,7 +106,7 @@ namespace UWNP
                         ErrorHandler(package);
                         break;
                     default:
-                        Debug.Log("server 有傳東西但沒有相應的 PackageType:" + package.packageType);
+                        Debug.Log("No match packageType::" + package.packageType);
                         break;
                 }
             }
@@ -119,7 +122,7 @@ namespace UWNP
         {
             if (heartBeatServiceGo != null)
             {
-                Debug.Log("關掉HB");
+                Debug.Log("Stop Heartbeat");
                 heartBeatServiceGo.Stop();
                 //heartBeatServiceGo = null;
             }
@@ -169,13 +172,12 @@ namespace UWNP
             if (msg.err > 0)
             {
                 handshakeTcs.TrySetResult(false);
-                Debug.LogError(msg.errMsg);
+                OnError?.Invoke(msg.errMsg);
                 return;
             }
 
             if (heartBeatServiceGo == null)
             {
-                Debug.Log("空的，新開一個GO");
                 GameObject go = new GameObject();
                 go.name = "heartBeatServiceGo";
                 heartBeatServiceGo = go.AddComponent(typeof(HeartBeatServiceGameObject)) as HeartBeatServiceGameObject;
@@ -183,7 +185,7 @@ namespace UWNP
             }
             else
             {
-                Debug.Log("重新連線，心跳重啟啦！");
+                OnReconect?.Invoke();
                 heartBeatServiceGo.ResetTimeout(msg.info.heartbeat);
             }//*/
             handshakeTcs.TrySetResult(true);
@@ -197,7 +199,6 @@ namespace UWNP
 
         private void OnServerTimeout()
         {
-            Debug.Log("伺服器沒有回應心跳");
             if (socket.State == WebSocketState.Connecting)
             {
                 socket.Close();

@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +9,8 @@ namespace UWNP{
     {
         public ToggleGroup toggleGroup;
         public InputField ip, port;
-        public string host,token;
+        public string token, version;
+        private string host;
         Client client;
         public Image img;
 
@@ -23,16 +22,29 @@ namespace UWNP{
 
         public void CreateConeccetionBtn() {
 
-            string host = string.Format("ws://{0}:{1}/=1.0.0", this.host, port.text);
+            string host = string.Format("ws://{0}:{1}/={2}", this.host, port.text, version);
 
-            client = new Client(host, token, 3);
+            client = new Client(host, "jon");
             client.OnDisconnect = OnDisconnect;
+            client.OnReconect = OnReconect;
+            client.OnError = OnError;
             CreateConeccetion().Forget();
+        }
+
+        private void OnError(string msg)
+        {
+            Debug.LogError(string.Format("err msg:{0}",msg));
+        }
+
+        private void OnReconect()
+        {
+            Debug.Log("OnReconect");
+            img.gameObject.SetActive(true);
         }
 
         private void OnDisconnect()
         {
-            Debug.Log("已斷線");
+            Debug.Log("OnDisconnect");
             img.gameObject.SetActive(false);
         }
 
@@ -62,7 +74,7 @@ namespace UWNP{
             while (count-->0 && !isConeccet)
             {
                 Debug.Log(host);
-                isConeccet = await client.ConnectAsync(token);
+                isConeccet = await client.ConnectAsync();
             }
             
             if (isConeccet)
@@ -79,8 +91,16 @@ namespace UWNP{
                 //請求/響應
                 TestRq testRq = new TestRq();
                 Message<TestRp> a = await client.RequestAsync<TestRq, TestRp>("TestController.testA", testRq);
-                Debug.Log("a:"+ a.info.packageType);
-
+                if (a.err>0)
+                {
+                    Debug.LogWarning("err:" + a.err);
+                    Debug.LogWarning("err msg:" + a.errMsg);
+                }
+                else
+                {
+                    Debug.Log("a:" + a.info.packageType);
+                }
+                
                 //通知
                 TestNotify testRq2 = new TestNotify() { name="小叮噹" };
                 client.Notify("TestController.testB", testRq2);

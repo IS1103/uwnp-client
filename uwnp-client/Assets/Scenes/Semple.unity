@@ -1725,8 +1725,8 @@ MonoBehaviour:
   toggleGroup: {fileID: 505829631}
   ip: {fileID: 1797113765}
   port: {fileID: 1227364434}
-  host: ws://127.0.0.1:3013/=1.0.0
   token: f00f3f0bdb77b6bc1dd960e9d071bd137fda3ee401063ed2a211426a87b88bee
+  version: 1.0.0
   img: {fileID: 1174991872}
 --- !u!4 &1947745809
 Transform:

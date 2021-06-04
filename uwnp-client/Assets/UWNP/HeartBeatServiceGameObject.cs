@@ -19,11 +19,11 @@ namespace UWNP
             
         }
 
+        static DateTime dt = new DateTime(1970, 1, 1);
         public static long GetTimestamp()
         {
-            TimeSpan ts = DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1);//ToUniversalTime()转换为标准时区的时间,去掉的话直接就用北京时间
-            //return (long)ts.TotalMilliseconds; //精确到毫秒
-            return (long)ts.TotalSeconds;//获取10位
+            TimeSpan ts = DateTime.Now.ToUniversalTime() - dt;
+            return (long)ts.TotalSeconds;
         }
 
         public float t;
@@ -31,7 +31,7 @@ namespace UWNP
         void Update()
         {
             t += Time.deltaTime;
-            if (t >= interval)
+            if (t > interval)
             {
                 CheckAndSendHearbeat();
                 t = 0;
@@ -41,16 +41,17 @@ namespace UWNP
         private void CheckAndSendHearbeat()
         {
             //檢查最後一次取得心跳包的時間是否小於客戶端心跳間隔時間
-            long s1 = GetTimestamp();
-            long s = (s1 - lastReceiveHeartbeatTime);
-            if (s > interval)
+            long curTime = GetTimestamp();
+            long intervalSec = curTime - lastReceiveHeartbeatTime;
+            if (intervalSec > interval)
             {
-                Debug.Log(string.Format("CheckAndSendHearbeat：s1:{0} l:{1} s:{2} s > interval:{3}", s1, lastReceiveHeartbeatTime, s, s > interval));
+                //Debug.Log(string.Format("XXXX CheckAndSendHearbeat：s1:{0} l:{1} s:{2}", curTime, lastReceiveHeartbeatTime, intervalSec));
                 this.enabled = false;
                 OnServerTimeout?.Invoke();
             }
             else
             {
+                //Debug.Log(string.Format(" CheckAndSendHearbeat：s1:{0} l:{1} s:{2}", curTime, lastReceiveHeartbeatTime, intervalSec));
                 this.enabled = true;
                 SendHeartbeatPack();
             }
@@ -83,9 +84,9 @@ namespace UWNP
             this.enabled = true;
             this.interval = (interval / 1000) / 2;
             t = 0;
-            long s1 = GetTimestamp();
-            long s = (s1 - lastReceiveHeartbeatTime);
-            Debug.Log(string.Format("ResetTimeout： s1:{0} l:{1} s:{2} s > interval:{3}", s1, lastReceiveHeartbeatTime, s, s > interval));
+            //long s1 = GetTimestamp();
+            //long s = (s1 - lastReceiveHeartbeatTime);
+            //Debug.Log(string.Format("ResetTimeout： s1:{0} l:{1} s:{2} s > interval:{3}", s1, lastReceiveHeartbeatTime, s, s > interval));
             lastReceiveHeartbeatTime = GetTimestamp();
             SendHeartbeatPack();
         }
