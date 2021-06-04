@@ -13,6 +13,7 @@ UWNP 全名是 unity+websocket+nodejs+protobuf 輕量級單線程連線框架，
   * response 服務端回復請求
   * notify 客戶端通知，服務端不必回復
   * push 服務端主動發送訊息給客戶端
+* 服務端從[這裡](https://github.com/IS1103/uwnp-server)點擊.
 ## 啟動
 1. 執行 server
 2. 選擇 127.0.0.1，點擊
