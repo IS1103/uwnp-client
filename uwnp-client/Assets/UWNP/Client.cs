@@ -24,16 +24,18 @@ namespace UWNP
 
         //public NetWorkState state;
 
-        public Action OnReconect,OnDisconnect;
+        public Action OnReconected,OnDisconnect,OnConnected;
         public Action<string> OnError;
         public uint retry;
         Protocol protocol;
         WebSocket socket;
         UniTaskCompletionSource<bool> utcs;
         private bool isForce;
+        private string token;
 
         public Client(string host,string token)
         {
+            this.token = token;
             ServicePointManager.SecurityProtocol =
                     SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls |
                     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;//*/
@@ -56,16 +58,18 @@ namespace UWNP
                 if (protocol == null)
                     protocol = new Protocol();
                 protocol.SetSocket(socket);
-                protocol.OnReconect = OnReconect;
+                protocol.OnReconected = OnReconected;
                 protocol.OnError = OnError;
-                bool isOK = await protocol.HandsharkAsync(token);
-                //Debug.Log("open:" + e);
+                bool isOK = await protocol.HandsharkAsync(this.token);
+                Debug.Log("open:" + e);
                 utcs.TrySetResult(isOK);
+                OnConnected?.Invoke();
             };
         }
 
-        public UniTask<bool> ConnectAsync()
+        public UniTask<bool> ConnectAsync(string token)
         {
+            this.token = token;
             socket.Open();
             return utcs.Task;
         }

@@ -26,9 +26,15 @@ namespace UWNP{
 
             client = new Client(host, "jon");
             client.OnDisconnect = OnDisconnect;
-            client.OnReconect = OnReconect;
+            client.OnReconected = OnReconected;
             client.OnError = OnError;
+            client.OnConnected = OnConnected;
             CreateConeccetion().Forget();
+        }
+
+        private void OnConnected()
+        {
+            Debug.Log("OnConnected");
         }
 
         private void OnError(string msg)
@@ -36,7 +42,7 @@ namespace UWNP{
             Debug.LogError(string.Format("err msg:{0}",msg));
         }
 
-        private void OnReconect()
+        private void OnReconected()
         {
             Debug.Log("OnReconect");
             img.gameObject.SetActive(true);
@@ -74,7 +80,7 @@ namespace UWNP{
             while (count-->0 && !isConeccet)
             {
                 Debug.Log(host);
-                isConeccet = await client.ConnectAsync();
+                isConeccet = await client.ConnectAsync("jon");
             }
             
             if (isConeccet)
@@ -108,6 +114,22 @@ namespace UWNP{
             }
             else
                 Debug.Log("多次嘗試連線但依然未連線");
+        }
+
+        public async void SendAPI()
+        {
+            //請求/響應
+            TestRq testRq = new TestRq();
+            Message<TestRp> a = await client.RequestAsync<TestRq, TestRp>("TestController.testA", testRq);
+            if (a.err > 0)
+            {
+                Debug.LogWarning("err:" + a.err);
+                Debug.LogWarning("err msg:" + a.errMsg);
+            }
+            else
+            {
+                Debug.Log("a:" + a.info.packageType);
+            }
         }
 
         private void OnDestroy()

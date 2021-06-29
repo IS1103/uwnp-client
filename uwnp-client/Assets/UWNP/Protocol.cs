@@ -15,7 +15,7 @@ namespace UWNP
         Dictionary<uint, UniTaskCompletionSource<Package>> packTcs = new Dictionary<uint, UniTaskCompletionSource<Package>>();
         WebSocket socket;
         public HeartBeatServiceGameObject heartBeatServiceGo;
-        public Action OnReconect;
+        public Action OnReconected;
         public Action<string> OnError;
 
         public void SetSocket(WebSocket socket)
@@ -185,7 +185,7 @@ namespace UWNP
             }
             else
             {
-                OnReconect?.Invoke();
+                OnReconected?.Invoke();
                 heartBeatServiceGo.ResetTimeout(msg.info.heartbeat);
             }//*/
             handshakeTcs.TrySetResult(true);
