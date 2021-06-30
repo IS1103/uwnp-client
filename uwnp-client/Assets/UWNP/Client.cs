@@ -119,7 +119,7 @@ namespace UWNP
             }
         }
 
-        public async UniTask<Message<S>> RequestAsync<T,S>(string route, T info = default)
+        public async UniTask<Message<S>> RequestAsync<T,S>(string route, T info = default, string modelName = null)
         {
             uint rqID = (uint)Interlocked.Increment(ref RqID);
             try
@@ -127,7 +127,7 @@ namespace UWNP
 #if SOCKET_DEBUG
                 Debug.Log(string.Format("[{0}][Request] -->> [{1}] {2}", rqID, route, JsonUtility.ToJson(info)));
 #endif
-                Package pack = await protocol.RequestAsync<T>(rqID, route, info);
+                Package pack = await protocol.RequestAsync<T>(rqID, route, info, modelName);
                 Message<S> msg = MessageProtocol.Decode<S>(pack.buff);
 #if SOCKET_DEBUG
                 Debug.Log(string.Format("[{0}][Request] <<-- [{1}] {2} {3}", rqID, route, JsonUtility.ToJson(msg), JsonUtility.ToJson(msg.info)));
@@ -136,7 +136,7 @@ namespace UWNP
             }
             catch (Exception e)
             {
-                Debug.Log(string.Format("[{0}][RequestAsync Exception]{1}", rqID, e.Message));
+                //Debug.Log(string.Format("[{0}][RequestAsync Exception]{1}", rqID, e.Message));
                 throw e;
             }
         }

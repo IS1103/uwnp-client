@@ -45,7 +45,7 @@ namespace UWNP
             socket.Send(packBuff, 0, packBuff.Length);
         }
 
-        public UniTask<Package> RequestAsync<T>(uint packID, string route, T info = default)
+        public UniTask<Package> RequestAsync<T>(uint packID, string route, T info = default, string modelName = null)
         {
             lock (packTcs)
             {
@@ -54,7 +54,8 @@ namespace UWNP
                 PackageType.REQUEST,
                 packID,
                 route,
-                info);
+                info,
+                modelName);
            
                 packTcs.Add(packID, pack);
                 socket.Send(packBuff, 0, packBuff.Length);

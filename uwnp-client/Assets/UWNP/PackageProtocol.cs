@@ -25,13 +25,14 @@ namespace UWNP
             return Serialize(sr);
         }
 
-        public static byte[] Encode<T>(PackageType type, uint packID, string route, T info)
+        public static byte[] Encode<T>(PackageType type, uint packID, string route, T info, string modelName = null)
         {
             Package sr = new Package(){
                 packageType = (uint)type,
                 packID = packID,
                 route = route,
-                buff = Serialize<T>(info)
+                buff = Serialize<T>(info),
+                modelName = modelName
             };
             return Serialize(sr);
         }

@@ -15,6 +15,13 @@ public class TestRp
 }
 
 [ProtoContract]
+public class TestRp2
+{
+    [ProtoMember(1)]
+    public string info;
+}
+
+[ProtoContract]
 public class TestNotify
 {
     [ProtoMember(1)]

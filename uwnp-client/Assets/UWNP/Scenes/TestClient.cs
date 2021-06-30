@@ -95,7 +95,7 @@ namespace UWNP{
                 });
 
                 //請求/響應
-                TestRq testRq = new TestRq();
+                /*TestRq testRq = new TestRq();
                 Message<TestRp> a = await client.RequestAsync<TestRq, TestRp>("TestController.testA", testRq);
                 if (a.err>0)
                 {
@@ -105,11 +105,23 @@ namespace UWNP{
                 else
                 {
                     Debug.Log("a:" + a.info.packageType);
+                }*/
+
+                //請求/響應
+                Message<TestRp2> a3 = await client.RequestAsync<TestRq, TestRp2>("TestController.testC",null,"custom1");
+                if (a3.err > 0)
+                {
+                    Debug.LogWarning("err:" + a3.err);
+                    Debug.LogWarning("err msg:" + a3.errMsg);
                 }
-                
+                else
+                {
+                    Debug.Log("a:" + a3.info.info);
+                }
+
                 //通知
-                TestNotify testRq2 = new TestNotify() { name="小叮噹" };
-                client.Notify("TestController.testB", testRq2);
+                //TestNotify testRq2 = new TestNotify() { name="小叮噹" };
+                //client.Notify("TestController.testB", testRq2);
                 //*/
             }
             else

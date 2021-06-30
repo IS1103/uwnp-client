@@ -19,6 +19,9 @@ namespace UWNP
 
         [ProtoMember(4)]
         public byte[] buff = null;
+
+        [ProtoMember(5)]
+        public string modelName = null;
     }
 
     [ProtoContract]
