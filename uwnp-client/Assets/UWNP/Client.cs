@@ -33,9 +33,8 @@ namespace UWNP
         private bool isForce;
         private string token;
 
-        public Client(string host,string token)
+        public Client(string host)
         {
-            this.token = token;
             ServicePointManager.SecurityProtocol =
                     SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls |
                     SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;//*/

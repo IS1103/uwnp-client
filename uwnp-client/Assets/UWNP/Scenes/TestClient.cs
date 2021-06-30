@@ -24,7 +24,7 @@ namespace UWNP{
 
             string host = string.Format("ws://{0}:{1}/={2}", this.host, port.text, version);
 
-            client = new Client(host, "jon");
+            client = new Client(host);
             client.OnDisconnect = OnDisconnect;
             client.OnReconected = OnReconected;
             client.OnError = OnError;
@@ -95,7 +95,7 @@ namespace UWNP{
                 });
 
                 //請求/響應
-                /*TestRq testRq = new TestRq();
+                TestRq testRq = new TestRq();
                 Message<TestRp> a = await client.RequestAsync<TestRq, TestRp>("TestController.testA", testRq);
                 if (a.err>0)
                 {
@@ -105,7 +105,7 @@ namespace UWNP{
                 else
                 {
                     Debug.Log("a:" + a.info.packageType);
-                }*/
+                }
 
                 //請求/響應
                 Message<TestRp2> a3 = await client.RequestAsync<TestRq, TestRp2>("TestController.testC",null,"custom1");
